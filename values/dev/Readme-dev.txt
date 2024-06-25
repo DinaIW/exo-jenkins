@@ -16,3 +16,18 @@ helm dependency update .
 
 
 -------------------------
+
+helm template ./datascientest
+sudo su
+kubectl config view --raw > ~/.kube/config
+helm install datascientest-chart ./datascientest --values=./datascientest/values.yaml
+exit #revenir sur l'utilisateur courant
+
+maj = helm upgrade datascientest-chart ./datascientest --values=./datascientest/values.yaml
+
+kubectl describe deploy datascientest-chart
+/
+
+---git
+
+git push -u origin dev

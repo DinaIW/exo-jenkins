@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-cast-db
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-db
+          image: postgres:12.0-alpine
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB_CAST
+          command: ["sh", "-c"]
+          args:
+            - |
+              #mode-debug:
+              #set -ex
+
+              # Utiliser directement la valeur pour POSTGRES_DB
+              export POSTGRES_DB=$POSTGRES_DB
+
+              # Attendre que PostgreSQL soit prêt
+              until pg_isready -h postgres-cast-service -U "$POSTGRES_USER"; do
+                echo "En attente de PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL est prêt."
+
+              # Vérifier si la base de données existe
+              if ! PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw $POSTGRES_DB; then
+                # Créer la base de données
+                PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $POSTGRES_DB;"
+              fi
+
+              # Créer la table si elle n'existe pas
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  CREATE TABLE IF NOT EXISTS casts (
+                      id SERIAL PRIMARY KEY,
+                      name VARCHAR(255),
+                      nationality VARCHAR(255)
+                  );
+              EOSQL
+
+              # Insérer des données dans la table
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  INSERT INTO casts (name, nationality) VALUES
+                    ('Tim Robbins', 'American'),
+                    ('Morgan Freeman', 'American');
+              EOSQL
+      restartPolicy: Never
+  backoffLimit: 4

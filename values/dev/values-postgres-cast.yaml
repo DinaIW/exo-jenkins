@@ -1,3 +1,0 @@
-postgres_cast:
-  replicas: 1
-  volumeSize: 1Gi

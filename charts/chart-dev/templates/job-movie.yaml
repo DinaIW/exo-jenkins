@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-movie-db
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-movie-db
+          image: postgres:12.0-alpine
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB_MOVIE
+          command: ["sh", "-c"]
+          args:
+            - |
+              # Attendre que PostgreSQL soit prêt
+              until pg_isready -h postgres-movie-service -U "$POSTGRES_USER"; do
+                  echo "En attente de PostgreSQL..."
+                  sleep 2
+              done
+              echo "PostgreSQL est prêt."
+
+              # Vérifier si la base de données 'movie' existe déjà
+              if ! PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw $POSTGRES_DB; then
+                  PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $POSTGRES_DB;"
+              fi
+
+              # Connexion à la base de données 'movie' et création de la table 'movies'
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  CREATE TABLE IF NOT EXISTS movies (
+                      id SERIAL PRIMARY KEY,
+                      name VARCHAR(50),
+                      plot VARCHAR(250),
+                      genres TEXT[],
+                      casts_id INTEGER[]
+                  );
+              EOSQL
+
+              # Insertion d'une entrée exemple dans la table 'movies'
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  INSERT INTO movies (name, plot, genres, casts_id) VALUES ('Fight Club', 'Ceci est un exemple de synopsis pour le film.', '{"Comédie","Drame"}', '{1,2}');
+              EOSQL
+      restartPolicy: Never
+  backoffLimit: 4
