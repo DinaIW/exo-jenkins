@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-cast-statefulset
+spec:
+  serviceName: "postgres-cast-service"
+  replicas: {{ .Values.postgres_cast.replicas }}
+  selector:
+    matchLabels:
+      app: postgres-cast
+  template:
+    metadata:
+      labels:
+        app: postgres-cast
+    spec:
+      containers:
+      - name: postgres-cast
+        image: {{ .Values.postgres_cast.image }}
+        ports:
+        - containerPort: {{ .Values.postgres_cast.port }}
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data-cast
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.postgres_cast.volumeSize }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cast-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.postgres_cast.port }}
+      targetPort: {{ .Values.postgres_cast.port }}
+      protocol: TCP
+  selector:
+    app: postgres-cast

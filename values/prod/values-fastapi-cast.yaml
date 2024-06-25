@@ -1,0 +1,2 @@
+fastapi_cast:
+  replicas: 3

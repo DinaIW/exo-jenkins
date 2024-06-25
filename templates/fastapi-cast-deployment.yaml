@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-cast
+spec:
+  replicas: {{ .Values.fastapi_cast.replicas }}
+  selector:
+    matchLabels:
+      app: fastapi-cast
+  template:
+    metadata:
+      labels:
+        app: fastapi-cast
+    spec:
+      containers:
+        - name: fastapi-cast
+          image: {{ .Values.fastapi_cast.image }}
+          ports:
+            - containerPort: {{ .Values.fastapi_cast.containerPort }}
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB_CAST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB_CAST
+            - name: POSTGRES_HOST
+              value: postgres-cast-service
+            - name: POSTGRES_PORT
+              value: "{{ .Values.postgres_cast.port }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-cast-service
+  labels:
+    app: fastapi-cast
+spec:
+  type: {{ .Values.fastapi_cast.service.type }}
+  ports:
+    - name: http-port
+      port: {{ .Values.fastapi_cast.service.port }}
+      protocol: TCP
+      targetPort: {{ .Values.fastapi_cast.service.targetPort }}
+      nodePort: 30008
+  selector:
+    app: fastapi-cast

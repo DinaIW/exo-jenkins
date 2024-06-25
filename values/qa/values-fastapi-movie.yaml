@@ -1,0 +1,2 @@
+fastapi_movie:
+  replicas: 1

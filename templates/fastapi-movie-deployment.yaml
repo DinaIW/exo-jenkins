@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-movie-deployment
+spec:
+  replicas: {{ .Values.fastapi_movie.replicas }}
+  selector:
+    matchLabels:
+      app: fastapi-movie
+  template:
+    metadata:
+      labels:
+        app: fastapi-movie
+    spec:
+      containers:
+      - name: fastapi-movie
+        image: "{{ .Values.fastapi_movie.image }}"
+        ports:
+        - containerPort: {{ .Values.fastapi_movie.containerPort }}
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB_MOVIE
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB_MOVIE
+        - name: POSTGRES_HOST
+          value: postgres-movie-service
+        - name: POSTGRES_PORT
+          value: "{{ .Values.postgres_movie.port }}"
+        - name: CAST_SERVICE_HOST_URL
+          value: "http://fastapi-cast-service:{{ .Values.fastapi_cast.service.port }}/api/v1/casts/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-movie-service
+  labels:
+    app: fastapi-movie
+spec:
+  type: "{{ .Values.fastapi_movie.service.type }}"
+  ports:
+  - name: http-port
+    port: {{ .Values.fastapi_movie.service.port }}
+    protocol: TCP
+    targetPort: {{ .Values.fastapi_movie.containerPort }}
+    nodePort: 30007
+  selector:
+    app: fastapi-movie
