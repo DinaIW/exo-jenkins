@@ -1,0 +1,4 @@
+apiVersion: v2
+name: chart-prod
+description: A Helm chart for my application in dev
+version: 0.0.1

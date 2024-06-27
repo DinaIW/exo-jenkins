@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fastapi-ingress-prod
+  namespace: prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: traefik
+spec:
+  tls:
+  - hosts:
+    - prod.dev-euphony.fr
+    secretName: rancher-secret
+  rules:
+  - host: prod.dev-euphony.fr
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/api/v1/movies"
+        backend:
+          service:
+            name: fastapi-movie-service
+            port:
+              number: 80

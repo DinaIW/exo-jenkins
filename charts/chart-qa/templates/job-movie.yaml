@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-movie-db
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-movie-db
+          image: postgres:12.0-alpine
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB_MOVIE
+          command: ["sh", "-c"]
+          args:
+            - |
+              # Attendre que PostgreSQL soit prêt
+              until pg_isready -h postgres-movie-service -U "$POSTGRES_USER"; do
+                  echo "En attente de PostgreSQL..."
+                  sleep 2
+              done
+              echo "PostgreSQL est prêt."
+
+              # Vérifier si la base de données 'movie' existe déjà
+              if ! PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw $POSTGRES_DB; then
+                  PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $POSTGRES_DB;"
+              fi
+
+              # Connexion à la base de données 'movie' et création de la table 'movies'
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  CREATE TABLE IF NOT EXISTS movies (
+                      id SERIAL PRIMARY KEY,
+                      name VARCHAR(50),
+                      plot VARCHAR(250),
+                      genres TEXT[],
+                      casts_id INTEGER[]
+                  );
+              EOSQL
+
+              # Insertion d'une entrée exemple dans la table 'movies'
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-movie-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  INSERT INTO movies (name, plot, genres, casts_id) VALUES
+                  ('Fight Club', 'Ceci est un exemple de synopsis pour le film.', '{"Comédie","Drame"}', '{1,2}'),
+                  ('Inception', 'Un thriller de science-fiction sur l''exploration des rêves.', '{"Action","Thriller","Science-fiction"}', '{3,4}'),
+                  ('The Dark Knight', 'Batman affronte le Joker à Gotham City.', '{"Action","Crime","Drame"}', '{5,6}'),
+                  ('Pulp Fiction', 'Des histoires entrelacées sur la vie criminelle à Los Angeles.', '{"Crime","Drame"}', '{7,8}'),
+                  ('The Shawshank Redemption', 'Un homme innocent emprisonné qui trouve l''amitié en prison.', '{"Drame"}', '{1,2}'),
+                  ('The Matrix', 'Un programmeur découvre que la réalité est une simulation informatique.', '{"Action","Science-fiction"}', '{9,10}'),
+                  ('Forrest Gump', 'La vie extraordinaire de Forrest Gump, à travers l''histoire américaine.', '{"Drame","Romance"}', '{11,12}'),
+                  ('Goodfellas', 'La montée et la chute d''un gangster dans la mafia italo-américaine.', '{"Crime","Drame"}', '{13,14}'),
+                  ('Titanic', 'Une histoire d''amour tragique sur le paquebot Titanic.', '{"Drame","Romance"}', '{3,15}'),
+                  ('Gladiator', 'Un général romain devient un gladiateur pour venger sa famille.', '{"Action","Aventure","Drame"}', '{16,17}'),
+                  ('The Godfather', 'La saga d''une famille mafieuse italo-américaine à New York.', '{"Crime","Drame"}', '{18,19}'),
+                  ('Jurassic Park', 'Des dinosaures clonés s''échappent d''un parc à thème.', '{"Aventure","Science-fiction"}', '{23,24}'),
+                  ('The Silence of the Lambs', 'Un agent du FBI s''allie à un psychopathe pour attraper un tueur en série.', '{"Crime","Drame","Thriller"}', '{25,26}'),
+                  ('The Lord of the Rings: The Fellowship of the Ring', 'Une quête épique pour détruire un anneau maléfique.', '{"Action","Aventure","Fantaisie"}', '{20,21}'),
+                  ('Saving Private Ryan', 'Une équipe de soldats recherche un soldat américain pendant la Seconde Guerre mondiale.', '{"Drame","Guerre"}', '{10,27}'),
+                  ('Inglourious Basterds', 'Un groupe de soldats juifs américains se lancent dans une mission pour assassiner des hauts dignitaires nazis.', '{"Aventure","Drame","Guerre"}', '{7,28}'),
+                  ('The Departed', 'Des policiers infiltrent le crime organisé à Boston.', '{"Crime","Drame","Thriller"}', '{5,13}'),
+                  ('Avatar', 'Un marine se retrouve sur une planète extraterrestre.', '{"Action","Aventure","Science-fiction"}', '{3,9}'),
+                  ('The Avengers', 'Les super-héros s''unissent pour sauver le monde.', '{"Action","Aventure","Fantaisie"}', '{4,5}'),
+                  ('Toy Story', 'Des jouets prennent vie lorsque les enfants ne sont pas là.', '{"Animation","Aventure","Comédie"}', '{22,23}'),
+                  ('The Sixth Sense', 'Un enfant voit des morts et cherche de l''aide auprès d''un psychologue.', '{"Drame","Mystère","Thriller"}', '{24,25}'),
+                  ('The Revenant', 'Un homme blessé est laissé pour mort et cherche la vengeance.', '{"Aventure","Drame","Western"}', '{26,27}'),
+                  ('Interstellar', 'Des explorateurs voyagent à travers un trou de ver pour trouver une nouvelle planète habitable.', '{"Aventure","Drame","Science-fiction"}', '{28,29}'),
+                  ('The Lion King', 'Un jeune lion retourne dans son royaume pour venger la mort de son père.', '{"Animation","Aventure","Drame"}', '{30,1}'),
+                  ('Mad Max: Fury Road', 'Dans un futur post-apocalyptique, une femme rebelle mène une rébellion contre un tyran.', '{"Action","Aventure","Science-fiction"}', '{2,3}'),
+                  ('Frozen', 'Deux sœurs se battent pour sauver leur royaume gelé.', '{"Animation","Aventure","Comédie"}', '{4,5}'),
+                  ('The Grand Budapest Hotel', 'Les aventures d''un concierge dans un célèbre hôtel européen.', '{"Comédie","Drame"}', '{6,7}'),
+                  ('The Social Network', 'La création de Facebook et les luttes de pouvoir qui en résultent.', '{"Biographie","Drame"}', '{8,9}'),
+                  ('La La Land', 'Une histoire d''amour entre un pianiste et une actrice à Los Angeles.', '{"Comédie musicale","Drame","Romance"}', '{10,11}'),
+                  ('Avengers: Endgame', 'Les Avengers tentent de ramener à la vie ceux qui ont été perdus.', '{"Action","Aventure","Fantaisie"}', '{12,13}'),
+                  ('Harry Potter and the Sorcerer''s Stone', 'Un jeune sorcier découvre son héritage magique à Poudlard.', '{"Aventure","Famille","Fantaisie"}', '{14,15}'),
+                  ('Gravity', 'Une astronaute se bat pour sa survie après un accident spatial.', '{"Drame","Science-fiction","Thriller"}', '{16,17}'),
+                  ('The Martian', 'Un astronaute laissé pour mort sur Mars lutte pour sa survie et son retour sur Terre.', '{"Aventure","Drame","Science-fiction"}', '{18,19}'),
+                  ('Black Panther', 'Un roi africain super-héros tente de protéger son peuple et son pays.', '{"Action","Aventure","Science-fiction"}', '{20,21}');
+              EOSQL
+      restartPolicy: Never
+  backoffLimit: 4

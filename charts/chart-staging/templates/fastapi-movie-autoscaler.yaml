@@ -1,0 +1,12 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fastapi-movie-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fastapi-movie-deployment
+  minReplicas: {{ .Values.fastapi_movie.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.fastapi_movie.autoscaling.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.fastapi_movie.autoscaling.targetCPUUtilizationPercentage }}

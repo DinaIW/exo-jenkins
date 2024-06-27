@@ -1,0 +1,158 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-cast-db
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-db
+          image: postgres:12.0-alpine
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB_CAST
+          command: ["sh", "-c"]
+          args:
+            - |
+              #mode-debug:
+              #set -ex
+
+              # Utiliser directement la valeur pour POSTGRES_DB
+              export POSTGRES_DB=$POSTGRES_DB
+
+              # Attendre que PostgreSQL soit prêt
+              until pg_isready -h postgres-cast-service -U "$POSTGRES_USER"; do
+                echo "En attente de PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL est prêt."
+
+              # Vérifier si la base de données existe
+              if ! PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw $POSTGRES_DB; then
+                # Créer la base de données
+                PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $POSTGRES_DB;"
+              fi
+
+              # Créer la table si elle n'existe pas
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  CREATE TABLE IF NOT EXISTS casts (
+                      id SERIAL PRIMARY KEY,
+                      name VARCHAR(255),
+                      nationality VARCHAR(255)
+                  );
+              EOSQL
+
+              # Insérer des données dans la table
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-cast-service -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" <<-EOSQL
+                  INSERT INTO casts (name, nationality) VALUES
+                    ('Tim Robbins', 'American'),
+                    ('Morgan Freeman', 'American'),
+                    ('Leonardo DiCaprio', 'American'),
+                    ('Ellen Page', 'Canadian'),
+                    ('Christian Bale', 'British'),
+                    ('Heath Ledger', 'Australian'),
+                    ('John Travolta', 'American'),
+                    ('Samuel L. Jackson', 'American'),
+                    ('Keanu Reeves', 'Canadian'),
+                    ('Laurence Fishburne', 'American'),
+                    ('Tom Hanks', 'American'),
+                    ('Robin Wright', 'American'),
+                    ('Robert De Niro', 'American'),
+                    ('Joe Pesci', 'American'),
+                    ('Kate Winslet', 'British'),
+                    ('Russell Crowe', 'New Zealander'),
+                    ('Joaquin Phoenix', 'American'),
+                    ('Marlon Brando', 'American'),
+                    ('Al Pacino', 'American'),
+                    ('Ian McKellen', 'British'),
+                    ('Elijah Wood', 'American'),
+                    ('Sam Neill', 'New Zealander'),
+                    ('Jeff Goldblum', 'American'),
+                    ('Jodie Foster', 'American'),
+                    ('Anthony Hopkins', 'British'),
+                    ('Matt Damon', 'American'),
+                    ('Brad Pitt', 'American'),
+                    ('Angelina Jolie', 'American'),
+                    ('Scarlett Johansson', 'American'),
+                    ('Tom Cruise', 'American'),
+                    ('Tom Hardy', 'British'),
+                    ('Michael Caine', 'British'),
+                    ('Hugh Jackman', 'Australian'),
+                    ('Christopher Nolan', 'British'),
+                    ('Willem Dafoe', 'American'),
+                    ('Gary Oldman', 'British'),
+                    ('Kurt Russell', 'American'),
+                    ('Jennifer Jason Leigh', 'American'),
+                    ('Jeff Bridges', 'American'),
+                    ('John Goodman', 'American'),
+                    ('Steve Buscemi', 'American'),
+                    ('Julianne Moore', 'American'),
+                    ('Mark Rylance', 'British'),
+                    ('Louis C.K.', 'American'),
+                    ('David Lynch', 'American'),
+                    ('Jack Nicholson', 'American'),
+                    ('Shelley Duvall', 'American'),
+                    ('Jeremy Irons', 'British'),
+                    ('James Earl Jones', 'American'),
+                    ('Matt Damon', 'American'),
+                    ('Franka Potente', 'German'),
+                    ('Clive Owen', 'British'),
+                    ('Adrien Brody', 'American'),
+                    ('Thomas Kretschmann', 'German'),
+                    ('Matt Damon', 'American'),
+                    ('Leonardo DiCaprio', 'American'),
+                    ('Jonah Hill', 'American'),
+                    ('Margot Robbie', 'Australian'),
+                    ('Kyle Chandler', 'American'),
+                    ('Martin Sheen', 'American'),
+                    ('Keanu Reeves', 'Canadian'),
+                    ('Laurence Fishburne', 'American'),
+                    ('Carrie-Anne Moss', 'Canadian'),
+                    ('Hugo Weaving', 'Australian'),
+                    ('Gloria Foster', 'American'),
+                    ('Joe Pantoliano', 'American'),
+                    ('Matthew McConaughey', 'American'),
+                    ('Anne Hathaway', 'American'),
+                    ('Jessica Chastain', 'American'),
+                    ('Ellen Burstyn', 'American'),
+                    ('Michael Caine', 'British'),
+                    ('Morgan Freeman', 'American'),
+                    ('Matthew McConaughey', 'American'),
+                    ('Anne Hathaway', 'American'),
+                    ('Jessica Chastain', 'American'),
+                    ('John Lithgow', 'American'),
+                    ('Ellen Burstyn', 'American'),
+                    ('Michael Caine', 'British'),
+                    ('Morgan Freeman', 'American'),
+                    ('Vin Diesel', 'American'),
+                    ('Dwayne Johnson', 'American'),
+                    ('Jason Statham', 'British'),
+                    ('Charlize Theron', 'South African'),
+                    ('Kevin Hart', 'American'),
+                    ('Louis C.K.', 'American'),
+                    ('Eric Stonestreet', 'American'),
+                    ('Kevin Hart', 'American'),
+                    ('Tiffany Haddish', 'American'),
+                    ('Steve Coogan', 'British'),
+                    ('Jenny Slate', 'American'),
+                    ('Lake Bell', 'American'),
+                    ('Dana Carvey', 'American'),
+                    ('Hannibal Buress', 'American'),
+                    ('T.J. Miller', 'American')
+                    ;
+              EOSQL
+      restartPolicy: Never
+  backoffLimit: 4

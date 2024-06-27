@@ -39,13 +39,7 @@ spec:
           value: "{{ .Values.postgres_movie.port }}"
         - name: CAST_SERVICE_HOST_URL
           value: "http://fastapi-cast-service:{{ .Values.fastapi_cast.service.port }}/api/v1/casts/"
-        #resources:
-          #requests:
-          #  cpu: {{ .Values.fastapi_movie.resources.requests.cpu }}
-          #  memory: {{ .Values.fastapi_movie.resources.requests.memory }}
-          #limits:
-          #  cpu: {{ .Values.fastapi_movie.resources.limits.cpu }}
-          #  memory: {{ .Values.fastapi_movie.resources.limits.memory }}
+
 ---
 apiVersion: v1
 kind: Service

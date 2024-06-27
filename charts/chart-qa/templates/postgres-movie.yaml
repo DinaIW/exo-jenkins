@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-movie-statefulset
+spec:
+  serviceName: "postgres-movie-service"
+  replicas: {{ .Values.postgres_movie.replicas }}
+  selector:
+    matchLabels:
+      app: postgres-movie
+  template:
+    metadata:
+      labels:
+        app: postgres-movie
+    spec:
+      containers:
+        - name: postgres-movie
+          image: {{ .Values.postgres_movie.image }}
+          ports:
+            - containerPort: {{ .Values.postgres_movie.port }}
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-movie
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.postgres_movie.volumeSize }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-movie-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.postgres_movie.port }}
+      targetPort: {{ .Values.postgres_movie.port }}
+      protocol: TCP
+  selector:
+    app: postgres-movie

@@ -9,14 +9,12 @@ fastapi_movie:
     port: 80
     targetPort: 8000
     replicas: 1
-    nodePort: 30100
-  #resources:
-    #requests:
-    #  cpu: "1"
-    #  memory: "512Mi"
-    #limits:
-    #  cpu: "2"
-    #  memory: "1Gi"
+    nodePort: 30020
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
 # ------------------------------------------------------------------------------
 # FastAPI Cast
 # ------------------------------------------------------------------------------
@@ -28,14 +26,12 @@ fastapi_cast:
     port: 80
     targetPort: 8000
     replicas: 1
-    nodePort: 30101
-  #resources:
-  #  requests:
-  #    cpu: "1"
-  #    memory: "512Mi"
-  #  limits:
-  #    cpu: "2"
-  #    memory: "1Gi"
+    nodePort: 30021
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 5
+    ttargetCPUUtilizationPercentage: 70
+
 # ------------------------------------------------------------------------------
 # Postgres Movie
 # ------------------------------------------------------------------------------
@@ -68,4 +64,18 @@ fastapi:
     service:
       port: 8002
 
-
+# ------------------------------------------------------------------------------
+# Ingress
+# ------------------------------------------------------------------------------
+ingress:
+  name: fastapi-ingress
+  ingressClassName: traefik
+  host: devops.dev-euphony.fr
+  path: /
+  pathType: Prefix
+  serviceName: fastapi-service
+  servicePort: 80
+  tls:
+    - hosts:
+        - devops.dev-euphony.fr
+      secretName: mon-certificat-secret
