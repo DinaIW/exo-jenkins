@@ -1,1 +1,0 @@
-helm template my-chart . --values values-qa.yaml

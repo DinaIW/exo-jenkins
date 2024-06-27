@@ -1,3 +1,0 @@
- postgres_movie:
-  replicas: 1
-  volumeSize: 2Gi
