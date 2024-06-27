@@ -1,0 +1,40 @@
+
+Création de la BDD
+kubectl exec -it postgres-movie-statefulset-0 -- bash
+
+psql -U root
+
+CREATE DATABASE movie_db_dev;
+
+\c movie_db_dev
+
+CREATE TABLE movies (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50),
+    plot VARCHAR(250),
+    genres TEXT[],
+    casts_id INTEGER[]
+);
+
+INSERT INTO movies (id, name, plot, genres, casts_id) VALUES
+(2, 'Titanic', 'L''histoire d''amour tragique entre un passager pauvre et une passagère riche à bord du paquebot Titanic.', ARRAY['Drame', 'Romance'], ARRAY[2]),
+(3, 'Interstellar', 'Un groupe d''explorateurs voyage à travers un trou de ver pour trouver une nouvelle maison pour l''humanité.', ARRAY['Science-fiction', 'Aventure'], ARRAY[3]),
+(4, 'Matrix', 'Un pirate informatique découvre que la réalité n''est qu''une simulation informatique et se joint à une rébellion pour se battre contre les machines.', ARRAY['Science-fiction', 'Action'], ARRAY[4]),
+(5, 'Gladiator', 'Un général romain est réduit en esclavage et devient gladiateur pour se venger de l''empereur corrompu.', ARRAY['Action', 'Aventure'], ARRAY[5]),
+(6, 'Forrest Gump', 'L''histoire de la vie d''un homme simple d''esprit qui a vécu de nombreux événements historiques importants.', ARRAY['Drame', 'Romance'], ARRAY[6]),
+(7, 'Les Évadés', 'Deux hommes condamnés à la prison à vie se lient d''amitié et planifient leur évasion.', ARRAY['Drame', 'Policier'], ARRAY[7]),
+(8, 'Fight Club', 'Un homme insomniaque et désespéré crée un club de combat souterrain avec un vendeur de savon charismatique.', ARRAY['Drame'], ARRAY[8]),
+(9, 'Mission : Impossible - Fallout', 'Ethan Hunt et son équipe doivent empêcher une catastrophe nucléaire mondiale.', ARRAY['Action', 'Aventure'], ARRAY[9]),
+(10, 'Harry Potter à l''école des sorciers', 'Un jeune garçon découvre qu''il est un sorcier et est envoyé à l''école de sorcellerie de Poudlard.', ARRAY['Fantastique', 'Aventure'], ARRAY[10]),
+(11, 'Iron Man', 'Un milliardaire inventeur construit une armure et devient un super-héros pour protéger le monde.', ARRAY['Action', 'Aventure'], ARRAY[11]),
+(12, 'Avengers', 'Une équipe de super-héros s''unit pour empêcher une invasion extraterrestre.', ARRAY['Action', 'Aventure'], ARRAY[12, 13, 14, 15]),
+(13, 'Thor', 'Le dieu nordique du tonnerre est banni sur Terre et doit apprendre à vivre parmi les humains.', ARRAY['Action', 'Aventure'], ARRAY[13]),
+(14, 'Hulk', 'Un scientifique est exposé à des rayons gamma et se transforme en un monstre vert lorsqu''il est en colère.', ARRAY['Action', 'Science-fiction'], ARRAY[14]),
+(15, 'Captain America: First Avenger', 'Un soldat maigre est transformé en super-soldat pendant la Seconde Guerre mondiale et combat les nazis.', ARRAY['Action', 'Aventure'], ARRAY[15]);
+
+
+Verification :
+Se connecter à la Bdd :
+\c movie_db_dev
+\dt
+SELECT * FROM movies LIMIT 5;

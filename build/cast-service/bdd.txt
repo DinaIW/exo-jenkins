@@ -1,0 +1,47 @@
+
+
+kubectl exec -it postgres-cast-statefulset-0 -- bash
+
+psql -U root
+
+CREATE DATABASE cast_db_dev;
+
+\c cast_db_dev
+
+CREATE TABLE casts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    nationality VARCHAR(255)
+);
+
+
+INSERT INTO casts (id, name, nationality) VALUES
+(1, 'Elijah Wood', 'Américain'),
+(2, 'Leonardo DiCaprio', 'Américain'),
+(3, 'Matthew McConaughey', 'Américain'),
+(4, 'Keanu Reeves', 'Canadien'),
+(5, 'Russell Crowe', 'Néo-Zélandais'),
+(6, 'Tom Hanks', 'Américain'),
+(7, 'Morgan Freeman', 'Américain'),
+(8, 'Brad Pitt', 'Américain'),
+(9, 'Tom Cruise', 'Américain'),
+(10, 'Emma Watson', 'Britannique'),
+(11, 'Robert Downey Jr.', 'Américain'),
+(12, 'Scarlett Johansson', 'Américaine'),
+(13, 'Chris Hemsworth', 'Australien'),
+(14, 'Mark Ruffalo', 'Américain'),
+(15, 'Chris Evans', 'Américain');
+
+Verification :
+Se connecter à la Bdd :
+\c cast_db_dev
+\dt
+SELECT * FROM casts LIMIT 5;
+
+
+
+database "cast_db_dev" does not exist
+
+
+psql -h postgres-cast-statefulset-0 -p -U root -d postgres_db_cast
+psql -h postgres-cast-service -p 5432 -U root -d postgres_db_cast

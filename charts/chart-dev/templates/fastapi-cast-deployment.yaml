@@ -37,13 +37,6 @@ spec:
               value: postgres-cast-service
             - name: POSTGRES_PORT
               value: "{{ .Values.postgres_cast.port }}"
-          # resources:
-          # requests:
-          #  cpu: {{ .Values.fastapi_cast.resources.requests.cpu }}
-          #  memory: {{ .Values.fastapi_cast.resources.requests.memory }}
-          #  limits:
-          #  cpu: {{ .Values.fastapi_cast.resources.limits.cpu }}
-          #  memory: {{ .Values.fastapi_cast.resources.limits.memory }}
 ---
 apiVersion: v1
 kind: Service
