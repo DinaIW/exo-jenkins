@@ -1,17 +1,49 @@
 pipeline {
-    agent any
-    parameters {
-        choice(name: 'DEPLOY_TO_PROD', choices: ['yes', 'no'], description: 'Deploy to production after successful staging deployment?')
+    environment {
+        DOCKER_ID = 'jhtyl13r'
+        DOCKER_TAG = "v.${BUILD_ID}.0"
+        DOCKER_PASS = credentials('DOCKER_HUB_PASS')
+        KUBECONFIG = credentials('config')
+        NAMESPACES = ['dev', 'qa', 'staging', 'prod']
     }
+    agent any
+
     stages {
-        stage('Deploy to Dev') {
+        stage('Docker Build and Test') {
+            steps {
+                script {
+                    // Assuming Docker build and test steps for movie-fastapi and cast-fastapi are done similarly
+                    
+                    // Docker build and test for movie-fastapi
+                    sh '''
+                    docker rm -f jenkins-movie-fastapi || true
+                    docker build -t $DOCKER_ID/movie-fastapi:$DOCKER_TAG -f build/movie-fastapi/Dockerfile .
+                    sleep 6
+                    curl localhost
+                    '''
+
+                    // Docker build and test for cast-fastapi
+                    sh '''
+                    docker rm -f jenkins-cast-fastapi || true
+                    docker build -t $DOCKER_ID/cast-fastapi:$DOCKER_TAG -f build/cast-fastapi/Dockerfile .
+                    sleep 6
+                    curl localhost
+                    '''
+                }
+            }
+        }
+
+        stage('Deployment to Dev') {
+            environment {
+                VALUES_FILE = 'charts/chart-dev/movie-fastapi/values-dev.yaml'
+            }
             steps {
                 script {
                     def chartName = 'chart-dev'
                     def namespace = 'dev'
+                    def chartDir = "charts/chart-dev"
                     def valuesFile = "charts/chart-dev/values.yaml"
                     def valuesSecretFile = "charts/chart-dev/values-secret.yaml"
-                    def chartDir = "charts/chart-dev"
 
                     // Check if chart is already installed
                     def chartInstalled = sh(returnStdout: true, script: "helm list -n ${namespace} | grep ${chartName}").trim()
@@ -20,7 +52,7 @@ pipeline {
                         sh "helm uninstall ${chartName} -n ${namespace}"
                     }
 
-                    // Install chart with two values files
+                    // Install chart
                     sh "helm install ${chartName} ${chartDir} -f ${valuesFile} -f ${valuesSecretFile} --namespace ${namespace}"
                 }
             }
@@ -36,9 +68,9 @@ pipeline {
                 script {
                     def chartName = 'chart-qa'
                     def namespace = 'qa'
+                    def chartDir = "charts/chart-qa"
                     def valuesFile = "charts/chart-qa/values.yaml"
                     def valuesSecretFile = "charts/chart-qa/values-secret.yaml"
-                    def chartDir = "charts/chart-qa"
 
                     // Check if chart is already installed
                     def chartInstalled = sh(returnStdout: true, script: "helm list -n ${namespace} | grep ${chartName}").trim()
@@ -63,9 +95,9 @@ pipeline {
                 script {
                     def chartName = 'chart-staging'
                     def namespace = 'staging'
+                    def chartDir = "charts/chart-staging"
                     def valuesFile = "charts/chart-staging/values.yaml"
                     def valuesSecretFile = "charts/chart-staging/values-secret.yaml"
-                    def chartDir = "charts/chart-staging"
 
                     // Check if chart is already installed
                     def chartInstalled = sh(returnStdout: true, script: "helm list -n ${namespace} | grep ${chartName}").trim()
@@ -90,24 +122,5 @@ pipeline {
                 script {
                     def chartName = 'chart-prod'
                     def namespace = 'prod'
-                    def valuesFile = "charts/chart-prod/values.yaml"
-                    def valuesSecretFile = "charts/chart-prod/values-secret.yaml"
                     def chartDir = "charts/chart-prod"
-
-                    // Check if chart is already installed
-                    def chartInstalled = sh(returnStdout: true, script: "helm list -n ${namespace} | grep ${chartName}").trim()
-                    if (chartInstalled) {
-                        // Uninstall chart
-                        sh "helm uninstall ${chartName} -n ${namespace}"
-                    }
-
-                    // Ask for confirmation before deploying to production
-                    input message: 'Are you sure you want to deploy to production?'
-
-                    // Install chart
-                    sh "helm install ${chartName} ${chartDir} -f ${valuesFile} -f ${valuesSecretFile} --namespace ${namespace}"
-                }
-            }
-        }
-    }
-}
+                    
