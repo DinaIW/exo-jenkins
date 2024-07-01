@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: fastapi-cast
-          image: {{ .Values.fastapi_cast.image }}
+          image: "{{ .Values.fastapi_cast.image }}:{{ .Values.fastapi_cast.tag }}"
           ports:
             - containerPort: {{ .Values.fastapi_cast.containerPort }}
           env:
