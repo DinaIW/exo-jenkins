@@ -15,7 +15,7 @@ pipeline {
                 script {
                     sh '''
                     docker rm -f jenkins-movie-fastapi || true
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-fastapi/Dockerfile .
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE -f build/movie-fastapi/Dockerfile .
                     docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
                     sleep 6
                     '''
@@ -28,7 +28,7 @@ pipeline {
                 script {
                     sh '''
                     docker rm -f jenkins-cast-fastapi || true
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-fastapi/Dockerfile .
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST -f build/cast-fastapi/Dockerfile .
                     docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
                     sleep 6
                     '''
