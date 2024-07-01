@@ -38,6 +38,6 @@ spec:
   ports:
     - port: 8080
       targetPort: {{ .Values.nginx.ports.containerPort }}
-      nodePort: 30080
+      nodePort: {{ .Values.nginx.ports.nodePort }}
   selector:
     app: nginx

@@ -57,6 +57,7 @@ nginx:
   image: nginx:latest
   ports:
     containerPort: 8080
+    nodePort: 31301
 
 fastapi:
   movie:
