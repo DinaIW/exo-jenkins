@@ -113,7 +113,7 @@ pipeline {
             when {
                 beforeAgent true
                 branch 'main'
-                expression { currentBuild.result == 'SUCCESS' && currentBuild.previousBuild.result == 'SUCCESS' && params.DEPLOY_TO_PROD == 'yes' }
+                expression { currentBuild.result == 'SUCCESS' && currentBuild.previousBuild.result == 'SUCCESS' }
             }
             environment {
                 VALUES_FILE = 'charts/chart-prod/values.yaml'
@@ -135,20 +135,22 @@ pipeline {
                         )
                         if (userInput == false) {
                             error('Déploiement en production annulé.')
+                        } else if (params.DEPLOY_TO_PROD == 'yes') {
+                            // Install chart
+                            sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG .kube/config
+                            cp ${VALUES_FILE} values.yml
+                            cp ${VALUES_SECRET_FILE} values-secret.yml
+                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
+                            '''
                         }
                     }
-                    // Install chart
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
-                    cp ${VALUES_FILE} values.yml
-                    cp ${VALUES_SECRET_FILE} values-secret.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
-                    '''
                 }
             }
         }
+
     }
 }
