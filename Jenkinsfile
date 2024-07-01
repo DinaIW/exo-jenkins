@@ -55,11 +55,12 @@ pipeline {
                     cp ${CHART_DIR}/${VALUES_SECRET_FILE} values-secret.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
+                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE} --wait
                     '''
                 }
             }
         }
+
 
         stage('Deployment to qa') {
             environment {
