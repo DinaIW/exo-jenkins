@@ -23,7 +23,7 @@ fastapi_cast:
     port: 80
     targetPort: 8000
     replicas: 1
-    nodePort: 30101
+    nodePort: 30200
 
 # ------------------------------------------------------------------------------
 # Postgres Movie

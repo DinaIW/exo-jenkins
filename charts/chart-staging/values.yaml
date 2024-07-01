@@ -10,7 +10,7 @@ fastapi_movie:
     port: 80
     targetPort: 8000
     replicas: 1
-    nodePort: 30020
+    nodePort: 30500
   autoscaling:
     minReplicas: 1
     maxReplicas: 5
@@ -28,7 +28,7 @@ fastapi_cast:
     port: 80
     targetPort: 8000
     replicas: 1
-    nodePort: 30021
+    nodePort: 30600
   autoscaling:
     minReplicas: 1
     maxReplicas: 5
