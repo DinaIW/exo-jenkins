@@ -51,8 +51,8 @@ pipeline {
                     rm -Rf .kube
                     mkdir .kube
                     cat $KUBECONFIG > .kube/config
-                    cp ${CHART_DIR}/${VALUES_FILE} values.yml
-                    cp ${CHART_DIR}/${VALUES_SECRET_FILE} values-secret.yml
+                    cp ${VALUES_FILE}
+                    cp ${VALUES_SECRET_FILE}
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE} --wait
