@@ -124,6 +124,19 @@ pipeline {
             }
             steps {
                 script {
+                    // Demander une confirmation avant de déployer en production
+                    timeout(time: 1, unit: 'HOURS') {
+                        def userInput = input(
+                            message: 'Êtes-vous sûr de vouloir déployer en production ?',
+                            ok: 'Déployer',
+                            parameters: [
+                                [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
+                            ]
+                        )
+                        if (userInput == false) {
+                            error('Déploiement en production annulé.')
+                        }
+                    }
                     // Install chart
                     sh '''
                     rm -Rf .kube
