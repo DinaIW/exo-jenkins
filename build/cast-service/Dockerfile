@@ -9,9 +9,9 @@ RUN pip install --upgrade pip
 RUN apt-get update && apt-get install -y gcc python3-dev
 
 # Copier les fichiers nécessaires dans le conteneur
-COPY ./app ./app
-COPY main.py .
-COPY requirements.txt .
+COPY build/cast-service/app ./app
+COPY build/cast-service/main.py .
+COPY build/cast-service/requirements.txt .
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt

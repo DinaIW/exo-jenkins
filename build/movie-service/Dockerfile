@@ -1,29 +1,21 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8-slim-buster
+FROM python:3.8
 
-# Set the working directory to /app
 WORKDIR /app
 
-# Upgrade pip
+# Mettre à jour pip
 RUN pip install --upgrade pip
 
-# Install any needed packages specified in requirements.txt
+# Installation des dépendances nécessaires pour la compilation
 RUN apt-get update && apt-get install -y gcc python3-dev
 
-# Copy the requirements file into the container
+# Copier les fichiers nécessaires dans le conteneur
+COPY build/movie-service/app ./app
+COPY build/movie-service/main.py .
 COPY build/movie-service/requirements.txt .
 
-# Install any needed packages specified in requirements.txt
+# Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application files into the container
-COPY build/movie-service/app ./app
-
-# Copy the main application file into the container
-COPY main.py .
-
-# Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-# Run the command to start the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
