@@ -14,7 +14,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins-movie-fastapi || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
                     docker login -u $DOCKER_ID -p $DOCKER_PASS
                     docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
@@ -28,7 +27,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins-cast-fastapi || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
                     docker login -u $DOCKER_ID -p $DOCKER_PASS
                     docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
