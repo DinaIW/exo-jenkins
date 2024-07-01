@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: fastapi-movie
-        image: "{{ .Values.fastapi_movie.image }}"
+        image: "{{ .Values.fastapi_movie.image }}:{{ .Values.fastapi_movie.tag }}"
         ports:
         - containerPort: {{ .Values.fastapi_movie.containerPort }}
         env:
