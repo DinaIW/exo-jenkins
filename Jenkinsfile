@@ -110,11 +110,7 @@ pipeline {
         }
 
         stage('Deploy to Production') {
-            when {
-                beforeAgent true
-                branch 'main'
-                expression { currentBuild.result == 'SUCCESS' && currentBuild.previousBuild.result == 'SUCCESS' }
-            }
+
             environment {
                 VALUES_FILE = 'charts/chart-prod/values.yaml'
                 VALUES_SECRET_FILE = 'charts/chart-prod/values-secret.yaml'
