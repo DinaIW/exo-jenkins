@@ -3,6 +3,7 @@
 # ------------------------------------------------------------------------------
 fastapi_movie:
   image: jhtyl13r/movie-fastapi
+  tag: "latest"
   containerPort: 8000
   service:
     type: NodePort
@@ -20,6 +21,7 @@ fastapi_movie:
 # ------------------------------------------------------------------------------
 fastapi_cast:
   image: jhtyl13r/cast-fastapi
+  tag: "latest"
   containerPort: 8000
   service:
     type: NodePort
