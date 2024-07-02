@@ -10,7 +10,7 @@ http://34.242.27.23:31389/api/v1/movies/
 ENV DEV
 
 - Pas de ingress
-- resources limités (request, limits, cpu) a revoir
+- resources limités (request, limits, cpu) (a revoir)
 - Bdd legère (512Mi)
 - Bdd de test : movie_db_dev & cast_db_dev
 

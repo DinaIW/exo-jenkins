@@ -1,3 +1,13 @@
+// TO DO
+/*
+Factoriser le code (Build Docker)
+Utiliser des variables pour le stockage des chemins d'accès.
+Ajouter des notifications de l'état du pipeline
+Test automatisés
+Automatiser le changement de version dans les différent Chart Helm
+*/
+
+
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
@@ -46,7 +56,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Install chart
+                    // Installation du Chart Dev
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
@@ -71,7 +81,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Install chart
+                    // Installation du Chart QA
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
@@ -95,7 +105,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Install chart
+                    // Installation du Chart Staging
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
@@ -132,7 +142,7 @@ pipeline {
                         if (userInput == false) {
                             error('Déploiement en production annulé.')
                         } else if (params.DEPLOY_TO_PROD == 'yes') {
-                            // Install chart
+                            // Installation du Chart Prod
                             sh '''
                             rm -Rf .kube
                             mkdir .kube
