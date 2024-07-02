@@ -22,12 +22,14 @@ volumes :                   postgres_data_movie:
 
 ---------------------------
 
+# A ranger
 Image : Docker
 docker build -t jhtyl13r/movie-fastapi .
 docker push jhtyl13r/cast-fastapi
 
 --------------------------
 
+#debug corrigé
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 ---------------------------
