@@ -108,7 +108,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Installation du Chart Staging Test TEst
+                    // Installation du Chart Staging
                     sh '''
                     helm uninstall ${CHART_NAME} -n ${NAMESPACE}
                     rm -Rf .kube
@@ -129,8 +129,8 @@ pipeline {
             }
         }
 
-                stage('Deploy to Production') {
-                environment {
+        stage('Deploy to Production') {
+            environment {
                 VALUES_FILE = 'charts/chart-prod/values.yaml'
                 VALUES_SECRET_FILE = 'charts/chart-prod/values-secret.yaml'
                 NAMESPACE = 'prod'
@@ -139,22 +139,24 @@ pipeline {
             }
             steps {
                 script {
+                    def confirm = false
+
                     // Demander une confirmation avant de déployer en production
                     timeout(time: 15, unit: 'MINUTES') {
-                    def userInput = input(
-                        message: 'Êtes-vous sûr de vouloir déployer en production ?',
-                        ok: 'Déployer',
-                        parameters: [
-                            [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
-                        ]
-                    )
-                    if (!userInput.confirm) {
+                        confirm = input(
+                            message: 'Êtes-vous sûr de vouloir déployer en production ?',
+                            ok: 'Déployer',
+                            parameters: [
+                                [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
+                            ]
+                        )
+                    }
+                    if (!confirm) {
                         error('Déploiement en production annulé.')
                     }
-                }
 
                     // Vérifier si le chart est déjà installé
-                    def chartInstalled = sh(returnStdout: true, script: "helm ls -n \${NAMESPACE} | grep \${CHART_NAME}").trim()
+                    def chartInstalled = sh(returnStdout: true, script: "helm ls -n ${NAMESPACE} | grep ${CHART_NAME}").trim()
                     if (chartInstalled) {
                         // Mise à niveau du chart
                         sh '''
@@ -193,6 +195,5 @@ pipeline {
                 }
             }
         }
-
     }
 }
