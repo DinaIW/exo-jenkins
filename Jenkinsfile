@@ -145,7 +145,7 @@ pipeline {
                             message: 'Êtes-vous sûr de vouloir déployer en production ?',
                             ok: 'Déployer',
                             parameters: [
-                                [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
+                                [\$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
                             ]
                         )
                         if (!userInput.confirm) {
@@ -154,7 +154,7 @@ pipeline {
                     }
 
                     // Vérifier si le chart est déjà installé
-                    def chartInstalled = sh(returnStdout: true, script: "helm ls -n ${NAMESPACE} | grep ${CHART_NAME}").trim()
+                    def chartInstalled = sh(returnStdout: true, script: "helm ls -n \${NAMESPACE} | grep \${CHART_NAME}").trim()
                     if (chartInstalled) {
                         // Mise à niveau du chart
                         sh '''
