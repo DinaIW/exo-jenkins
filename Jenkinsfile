@@ -108,7 +108,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Installation du Chart Staging
+                    // Installation du Chart Staging Test
                     sh '''
                     helm uninstall ${CHART_NAME} -n ${NAMESPACE}
                     rm -Rf .kube
