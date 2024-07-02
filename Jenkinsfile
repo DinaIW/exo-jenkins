@@ -23,18 +23,12 @@ pipeline {
         stage('Docker Build for movie-fastapi') {
             steps {
                 script {
-                    // Vérifier si le Dockerfile a changé
-                    sh 'git diff --exit-code HEAD^ HEAD build/movie-service/Dockerfile'
-                    if (currentBuild.result == 'SUCCESS') {
-                        sh '''
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
-                        docker login -u $DOCKER_ID -p $DOCKER_PASS
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
-                        sleep 6
-                        '''
-                    } else {
-                        echo 'Aucun changement dans le Dockerfile, pas de build ni de push de l\'image'
-                    }
+                    sh '''
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
+                    sleep 6
+                    '''
                 }
             }
         }
@@ -42,18 +36,12 @@ pipeline {
         stage('Docker Build for cast-fastapi') {
             steps {
                 script {
-                    // Vérifier si le Dockerfile a changé
-                    sh 'git diff --exit-code HEAD^ HEAD build/cast-service/Dockerfile'
-                    if (currentBuild.result == 'SUCCESS') {
-                        sh '''
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
-                        docker login -u $DOCKER_ID -p $DOCKER_PASS
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
-                        sleep 6
-                        '''
-                    } else {
-                        echo 'Aucun changement dans le Dockerfile, pas de build ni de push de l\'image'
-                    }
+                    sh '''
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
+                    sleep 6
+                    '''
                 }
             }
         }
