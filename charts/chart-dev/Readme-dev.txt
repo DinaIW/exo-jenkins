@@ -1,3 +1,6 @@
+TO DO
+- Verifier pourquoi les port du service fastapi-movie ne prenne pas la valeur données dans les values.
+
 Lancer le chart :
 helm install chart-dev --namespace dev ./chart-dev/ -f ./chart-dev/values.yaml -f ./chart-dev/values-secret.yaml
 helm uninstall chart-dev -n dev
