@@ -138,28 +138,37 @@ pipeline {
                 CHART_DIR = 'charts/chart-prod'
             }
             steps {
-                // Create an Approval Button with a timeout of 15 minutes.
-                // This requires manual validation in order to deploy to the production environment
-                timeout(time: 15, unit: 'MINUTES') {
-                    input message: 'Do you want to deploy in production?', ok: 'Yes'
-                }
-
                 script {
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
-                    cp ${VALUES_FILE} values.yml
-                    cp ${VALUES_SECRET_FILE} values-secret.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm install ${CHART_NAME} ${CHART_DIR} \
-                    --values=values.yml \
-                    --values=values-secret.yml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set fastapi_movie.tag=${DOCKER_TAG} \
-                    --set fastapi_cast.tag=${DOCKER_TAG}
-                    '''
+                    // Demander une confirmation avant de déployer en production
+                    timeout(time: 1, unit: 'HOURS') {
+                        def userInput = input(
+                            message: 'Êtes-vous sûr de vouloir déployer en production ?',
+                            ok: 'Déployer',
+                            parameters: [
+                                [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
+                            ]
+                        )
+                        if (userInput == false) {
+                            error('Déploiement en production annulé.')
+                        } else {
+                            // Installation du Chart Prod
+                            sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG .kube/config
+                            cp ${VALUES_FILE} values.yml
+                            cp ${VALUES_SECRET_FILE} values-secret.yml
+                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                            --values=values.yml \
+                            --values=values-secret.yml \
+                            --namespace ${NAMESPACE} \
+                            --wait \
+                            --set fastapi_movie.tag=${DOCKER_TAG} \
+                            --set fastapi_cast.tag=${DOCKER_TAG}
+                            '''
+                        }
+                    }
                 }
             }
         }
