@@ -58,6 +58,7 @@ pipeline {
                 script {
                     // Installation du Chart Dev
                     sh '''
+                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
                     rm -Rf .kube
                     mkdir .kube
                     cp $KUBECONFIG .kube/config
@@ -89,6 +90,7 @@ pipeline {
                 script {
                     // Installation du Chart QA
                     sh '''
+                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
                     rm -Rf .kube
                     mkdir .kube
                     cp $KUBECONFIG .kube/config
@@ -119,6 +121,7 @@ pipeline {
                 script {
                     // Installation du Chart Staging
                     sh '''
+                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
                     rm -Rf .kube
                     mkdir .kube
                     cp $KUBECONFIG .kube/config
