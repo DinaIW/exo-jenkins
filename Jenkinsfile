@@ -7,7 +7,6 @@ Test automatisés
 Automatiser le changement de version dans les différent Chart Helm
 */
 
-
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
@@ -77,7 +76,6 @@ pipeline {
             }
         }
 
-
         stage('Deployment to qa') {
             environment {
                 VALUES_FILE = 'charts/chart-qa/values.yaml'
@@ -141,7 +139,6 @@ pipeline {
         }
 
         stage('Deploy to Production') {
-
             environment {
                 VALUES_FILE = 'charts/chart-prod/values.yaml'
                 VALUES_SECRET_FILE = 'charts/chart-prod/values-secret.yaml'
@@ -163,27 +160,47 @@ pipeline {
                         if (userInput == false) {
                             error('Déploiement en production annulé.')
                         } else if (params.DEPLOY_TO_PROD == 'yes') {
-                            // Installation du Chart Prod
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            cp $KUBECONFIG .kube/config
-                            cp ${VALUES_FILE} values.yml
-                            cp ${VALUES_SECRET_FILE} values-secret.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
-                            --values=values.yml \
-                            --values=values-secret.yml \
-                            --namespace ${NAMESPACE} \
-                            --wait \
-                            --set fastapi_movie.tag=${DOCKER_TAG} \
-                            --set fastapi_cast.tag=${DOCKER_TAG}
-                            '''
+                            // Vérifier si le chart est déjà installé
+                            def chartInstalled = sh(returnStdout: true, script: "helm ls -n ${NAMESPACE} | grep ${CHART_NAME}").trim()
+                            if (chartInstalled) {
+                                // Mise à niveau du chart
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                cp $KUBECONFIG .kube/config
+                                cp ${VALUES_FILE} values.yml
+                                cp ${VALUES_SECRET_FILE} values-secret.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade ${CHART_NAME} ${CHART_DIR} \
+                                --values=values.yml \
+                                --values=values-secret.yml \
+                                --namespace ${NAMESPACE} \
+                                --wait \
+                                --set fastapi_movie.tag=${DOCKER_TAG} \
+                                --set fastapi_cast.tag=${DOCKER_TAG}
+                                '''
+                            } else {
+                                // Installation du chart
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                cp $KUBECONFIG .kube/config
+                                cp ${VALUES_FILE} values.yml
+                                cp ${VALUES_SECRET_FILE} values-secret.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm install ${CHART_NAME} ${CHART_DIR} \
+                                --values=values.yml \
+                                --values=values-secret.yml \
+                                --namespace ${NAMESPACE} \
+                                --wait \
+                                --set fastapi_movie.tag=${DOCKER_TAG} \
+                                --set fastapi_cast.tag=${DOCKER_TAG}
+                                '''
+                            }
                         }
                     }
                 }
             }
         }
-
     }
 }
