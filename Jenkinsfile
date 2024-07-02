@@ -11,7 +11,7 @@ Automatiser le changement de version dans les différent Chart Helm
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
-        DOCKER_TAG = "v.${BUILD_ID}.0"
+        DOCKER_TAG = "v.${env.BUILD_ID}.0"
         DOCKER_IMAGE_MOVIE = 'movie-fastapi'
         DOCKER_IMAGE_CAST = 'cast-fastapi'
         DOCKER_PASS = credentials('DOCKER_HUB_PASS')
@@ -64,7 +64,13 @@ pipeline {
                     cp ${VALUES_FILE} values.yml
                     cp ${VALUES_SECRET_FILE} values-secret.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE} --wait
+                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    --values=values.yml \
+                    --values=values-secret.yml \
+                    --namespace ${NAMESPACE} \
+                    --wait \
+                    --set fastapi_movie.tag=${DOCKER_TAG} \
+                    --set fastapi_cast.tag=${DOCKER_TAG}
                     '''
                 }
             }
@@ -89,7 +95,13 @@ pipeline {
                     cp ${VALUES_FILE} values.yml
                     cp ${VALUES_SECRET_FILE} values-secret.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
+                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    --values=values.yml \
+                    --values=values-secret.yml \
+                    --namespace ${NAMESPACE} \
+                    --wait \
+                    --set fastapi_movie.tag=${DOCKER_TAG} \
+                    --set fastapi_cast.tag=${DOCKER_TAG}
                     '''
                 }
             }
@@ -113,7 +125,13 @@ pipeline {
                     cp ${VALUES_FILE} values.yml
                     cp ${VALUES_SECRET_FILE} values-secret.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
+                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    --values=values.yml \
+                    --values=values-secret.yml \
+                    --namespace ${NAMESPACE} \
+                    --wait \
+                    --set fastapi_movie.tag=${DOCKER_TAG} \
+                    --set fastapi_cast.tag=${DOCKER_TAG}
                     '''
                 }
             }
@@ -150,7 +168,13 @@ pipeline {
                             cp ${VALUES_FILE} values.yml
                             cp ${VALUES_SECRET_FILE} values-secret.yml
                             sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} --values=values.yml --values=values-secret.yml --namespace ${NAMESPACE}
+                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                            --values=values.yml \
+                            --values=values-secret.yml \
+                            --namespace ${NAMESPACE} \
+                            --wait \
+                            --set fastapi_movie.tag=${DOCKER_TAG} \
+                            --set fastapi_cast.tag=${DOCKER_TAG}
                             '''
                         }
                     }

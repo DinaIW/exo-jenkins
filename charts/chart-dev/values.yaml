@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 fastapi_movie:
   image: jhtyl13r/movie-fastapi
-  tag: "v.${BUILD_ID}.0"
+  tag: "v.${DOCKER_TAG}.0"
   containerPort: 8000
   service:
     type: NodePort
@@ -16,7 +16,7 @@ fastapi_movie:
 # ------------------------------------------------------------------------------
 fastapi_cast:
   image: jhtyl13r/cast-fastapi
-  tag: "v.${BUILD_ID}.0"
+  tag: "${DOCKER_TAG}"
   containerPort: 8000
   service:
     type: NodePort
