@@ -1,12 +1,3 @@
-// TO DO
-/*
-Factoriser le code (Build Docker)
-Utiliser des variables pour le stockage des chemins d'accès.
-Ajouter des notifications de l'état du pipeline
-Test automatisés
-Automatiser le changement de version dans les différent Chart Helm
-*/
-
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
@@ -157,9 +148,7 @@ pipeline {
                                 [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
                             ]
                         )
-                        if (userInput == false) {
-                            error('Déploiement en production annulé.')
-                        } else if (params.DEPLOY_TO_PROD == 'yes') {
+                        if (userInput.confirm) {
                             // Vérifier si le chart est déjà installé
                             def chartInstalled = sh(returnStdout: true, script: "helm ls -n ${NAMESPACE} | grep ${CHART_NAME}").trim()
                             if (chartInstalled) {
@@ -197,6 +186,8 @@ pipeline {
                                 --set fastapi_cast.tag=${DOCKER_TAG}
                                 '''
                             }
+                        } else {
+                            error('Déploiement en production annulé.')
                         }
                     }
                 }
