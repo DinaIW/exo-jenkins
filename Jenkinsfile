@@ -1,3 +1,13 @@
+// TO DO
+/*
+Factoriser le code (Build Docker)
+Utiliser des variables pour le stockage des chemins d'accès.
+Ajouter des notifications de l'état du pipeline
+Test automatisés
+Automatiser le changement de version dans les différent Chart Helm
+*/
+
+
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
@@ -77,6 +87,7 @@ pipeline {
                 }
             }
         }
+
 
         stage('Deployment to qa') {
             environment {
