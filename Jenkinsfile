@@ -148,7 +148,7 @@ pipeline {
                                 [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
                             ]
                         )
-                        if (userInput['confirm']) {
+                        if (userInput.confirm) {
                             // Vérifier si le chart est déjà installé
                             def chartInstalled = sh(returnStdout: true, script: "helm ls -n ${NAMESPACE} | grep ${CHART_NAME}").trim()
                             if (chartInstalled) {
