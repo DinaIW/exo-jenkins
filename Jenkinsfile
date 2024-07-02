@@ -130,7 +130,7 @@ pipeline {
         }
 
                 stage('Deploy to Production') {
-            environment {
+                environment {
                 VALUES_FILE = 'charts/chart-prod/values.yaml'
                 VALUES_SECRET_FILE = 'charts/chart-prod/values-secret.yaml'
                 NAMESPACE = 'prod'
@@ -141,17 +141,17 @@ pipeline {
                 script {
                     // Demander une confirmation avant de déployer en production
                     timeout(time: 15, unit: 'MINUTES') {
-                        def userInput = input(
-                            message: 'Êtes-vous sûr de vouloir déployer en production ?',
-                            ok: 'Déployer',
-                            parameters: [
-                                [\$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
-                            ]
-                        )
-                        if (!userInput.confirm) {
-                            error('Déploiement en production annulé.')
-                        }
+                    def userInput = input(
+                        message: 'Êtes-vous sûr de vouloir déployer en production ?',
+                        ok: 'Déployer',
+                        parameters: [
+                            [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
+                        ]
+                    )
+                    if (!userInput.confirm) {
+                        error('Déploiement en production annulé.')
                     }
+                }
 
                     // Vérifier si le chart est déjà installé
                     def chartInstalled = sh(returnStdout: true, script: "helm ls -n \${NAMESPACE} | grep \${CHART_NAME}").trim()
