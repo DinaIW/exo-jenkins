@@ -1,13 +1,3 @@
-// TO DO
-/*
-Factoriser le code (Build Docker)
-Utiliser des variables pour le stockage des chemins d'accès.
-Ajouter des notifications de l'état du pipeline
-Test automatisés
-Automatiser le changement de version dans les différent Chart Helm
-*/
-
-
 pipeline {
     environment {
         DOCKER_ID = 'jhtyl13r'
@@ -23,12 +13,18 @@ pipeline {
         stage('Docker Build for movie-fastapi') {
             steps {
                 script {
-                    sh '''
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
-                    sleep 6
-                    '''
+                    // Vérifier si le Dockerfile a changé
+                    sh 'git diff --exit-code HEAD^ HEAD build/movie-service/Dockerfile'
+                    if (currentBuild.result == 'SUCCESS') {
+                        sh '''
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
+                        docker login -u $DOCKER_ID -p $DOCKER_PASS
+                        docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
+                        sleep 6
+                        '''
+                    } else {
+                        echo 'Aucun changement dans le Dockerfile, pas de build ni de push de l\'image'
+                    }
                 }
             }
         }
@@ -36,12 +32,18 @@ pipeline {
         stage('Docker Build for cast-fastapi') {
             steps {
                 script {
-                    sh '''
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
-                    sleep 6
-                    '''
+                    // Vérifier si le Dockerfile a changé
+                    sh 'git diff --exit-code HEAD^ HEAD build/cast-service/Dockerfile'
+                    if (currentBuild.result == 'SUCCESS') {
+                        sh '''
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
+                        docker login -u $DOCKER_ID -p $DOCKER_PASS
+                        docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
+                        sleep 6
+                        '''
+                    } else {
+                        echo 'Aucun changement dans le Dockerfile, pas de build ni de push de l\'image'
+                    }
                 }
             }
         }
@@ -75,7 +77,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Deployment to qa') {
             environment {
