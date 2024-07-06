@@ -75,7 +75,7 @@ pipeline {
                     sh 'pwd'
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
-                        helm install chart-dev --namespace dev \
+                        helm upgrade --install chart-dev --namespace dev \
                         -f charts/chart-dev/values.yaml \
                         -f charts/chart-dev/values-secret.yaml
                     """
