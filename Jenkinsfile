@@ -12,7 +12,8 @@ pipeline {
             steps {
                 git credentialsId: 'github-credentials', url: 'https://github.com/DinaIW/examjen.git'
                 script {
-                    pwd()
+                    echo "Current directory after checkout:"
+                    sh 'pwd'
                 }
             }
         }
@@ -22,7 +23,8 @@ pipeline {
                 stage('Build cast-service Image') {
                     steps {
                         script {
-                            pwd()
+                            echo "Current directory before building cast-service image:"
+                            sh 'pwd'
                             docker.build("didiiiw/jen:cast-service-latest", "-f cast-service/Dockerfile ./cast-service")
                         }
                     }
@@ -30,7 +32,8 @@ pipeline {
                 stage('Build movie-service Image') {
                     steps {
                         script {
-                            pwd()
+                            echo "Current directory before building movie-service image:"
+                            sh 'pwd'
                             docker.build("didiiiw/jen:movie-service-latest", "-f movie-service/Dockerfile ./movie-service")
                         }
                     }
@@ -43,7 +46,8 @@ pipeline {
                 stage('Push cast-service Image') {
                     steps {
                         script {
-                            pwd()
+                            echo "Current directory before pushing cast-service image:"
+                            sh 'pwd'
                             docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
                                 docker.image("didiiiw/jen:cast-service-latest").push()
                             }
@@ -53,7 +57,8 @@ pipeline {
                 stage('Push movie-service Image') {
                     steps {
                         script {
-                            pwd()
+                            echo "Current directory before pushing movie-service image:"
+                            sh 'pwd'
                             docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
                                 docker.image("didiiiw/jen:movie-service-latest").push()
                             }
@@ -66,7 +71,8 @@ pipeline {
         stage('Deploy to Dev') {
             steps {
                 script {
-                    pwd()
+                    echo "Current directory before deploying to Dev:"
+                    sh 'pwd'
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-dev --namespace dev \
@@ -80,7 +86,8 @@ pipeline {
         stage('Deploy to QA') {
             steps {
                 script {
-                    pwd()
+                    echo "Current directory before deploying to QA:"
+                    sh 'pwd'
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-qa --namespace qa \
@@ -94,7 +101,8 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 script {
-                    pwd()
+                    echo "Current directory before deploying to Staging:"
+                    sh 'pwd'
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-staging --namespace staging \
@@ -112,7 +120,8 @@ pipeline {
             steps {
                 input message: 'Deploy to Production?', ok: 'Deploy'
                 script {
-                    pwd()
+                    echo "Current directory before deploying to Production:"
+                    sh 'pwd'
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-prod --namespace prod \
