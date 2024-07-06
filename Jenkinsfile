@@ -56,13 +56,26 @@ pipeline {
             }
         }
 
+        stage('Package Helm Chart') {
+            steps {
+                script {
+                    sh '''
+                    helm package charts/chart-dev -d charts/chart-dev
+                    helm package charts/chart-qa -d charts/chart-qa
+                    helm package charts/chart-staging -d charts/chart-staging
+                    helm package charts/chart-prod -d charts/chart-prod
+                    '''
+                }
+            }
+        }
+
         stage('Deploy to Dev') {
             environment {
-                VALUES_FILE = 'charts/chart-dev/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-dev/values-secret.yaml'
                 NAMESPACE = 'dev'
                 CHART_NAME = 'chart-dev'
-                CHART_DIR = 'charts/chart-dev'
+                CHART_PACKAGE = 'charts/chart-dev/chart-dev-0.1.0.tgz'
+                VALUES_FILE = 'charts/chart-dev/values.yaml'
+                VALUES_SECRET_FILE = 'charts/chart-dev/values-secret.yaml'
             }
             steps {
                 script {
@@ -70,12 +83,12 @@ pipeline {
                     mkdir -p ~/.kube && cp ${KUBECONFIG_FILE} ~/.kube/config
                     cp ${VALUES_FILE} values.yaml
                     cp ${VALUES_SECRET_FILE} values-secret.yaml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    helm upgrade --install ${CHART_NAME} ${CHART_PACKAGE} \
+                    --namespace ${NAMESPACE} \
                     --values=values.yaml \
                     --values=values-secret.yaml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set image.repository=didiiiw/jen,image.tag=${DOCKER_TAG}
+                    --set image.repository=didiiiw/jen,image.tag=cast-service-latest \
+                    --wait
                     '''
                 }
             }
@@ -83,11 +96,11 @@ pipeline {
 
         stage('Deploy to QA') {
             environment {
-                VALUES_FILE = 'charts/chart-qa/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-qa/values-secret.yaml'
                 NAMESPACE = 'qa'
                 CHART_NAME = 'chart-qa'
-                CHART_DIR = 'charts/chart-qa'
+                CHART_PACKAGE = 'charts/chart-qa/chart-qa-0.1.0.tgz'
+                VALUES_FILE = 'charts/chart-qa/values.yaml'
+                VALUES_SECRET_FILE = 'charts/chart-qa/values-secret.yaml'
             }
             steps {
                 script {
@@ -95,13 +108,11 @@ pipeline {
                     mkdir -p ~/.kube && cp ${KUBECONFIG_FILE} ~/.kube/config
                     cp ${VALUES_FILE} values.yaml
                     cp ${VALUES_SECRET_FILE} values-secret.yaml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    helm upgrade --install ${CHART_NAME} ${CHART_PACKAGE} \
+                    --namespace ${NAMESPACE} \
                     --values=values.yaml \
                     --values=values-secret.yaml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set image.repository=didiiiw/jen,image.tag=${DOCKER_TAG}
+                    --wait
                     '''
                 }
             }
@@ -109,11 +120,11 @@ pipeline {
 
         stage('Deploy to Staging') {
             environment {
-                VALUES_FILE = 'charts/chart-staging/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-staging/values-secret.yaml'
                 NAMESPACE = 'staging'
                 CHART_NAME = 'chart-staging'
-                CHART_DIR = 'charts/chart-staging'
+                CHART_PACKAGE = 'charts/chart-staging/chart-staging-0.1.0.tgz'
+                VALUES_FILE = 'charts/chart-staging/values.yaml'
+                VALUES_SECRET_FILE = 'charts/chart-staging/values-secret.yaml'
             }
             steps {
                 script {
@@ -121,12 +132,11 @@ pipeline {
                     mkdir -p ~/.kube && cp ${KUBECONFIG_FILE} ~/.kube/config
                     cp ${VALUES_FILE} values.yaml
                     cp ${VALUES_SECRET_FILE} values-secret.yaml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
+                    helm upgrade --install ${CHART_NAME} ${CHART_PACKAGE} \
+                    --namespace ${NAMESPACE} \
                     --values=values.yaml \
                     --values=values-secret.yaml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set image.repository=didiiiw/jen,image.tag=${DOCKER_TAG}
+                    --wait
                     '''
                 }
             }
@@ -143,12 +153,11 @@ pipeline {
                     mkdir -p ~/.kube && cp ${KUBECONFIG_FILE} ~/.kube/config
                     cp ${VALUES_FILE} values.yaml
                     cp ${VALUES_SECRET_FILE} values-secret.yaml
-                    helm upgrade --install chart-prod charts/chart-prod \
+                    helm upgrade --install chart-prod charts/chart-prod-0.1.0.tgz \
+                    --namespace prod \
                     --values=values.yaml \
                     --values=values-secret.yaml \
-                    --namespace prod \
-                    --wait \
-                    --set image.repository=didiiiw/jen,image.tag=${DOCKER_TAG}
+                    --wait
                     '''
                 }
             }
