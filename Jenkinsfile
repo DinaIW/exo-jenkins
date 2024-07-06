@@ -56,64 +56,6 @@ pipeline {
             }
         }
 
-        pipeline {
-    agent any
-
-    environment {
-        DOCKER_HUB_PASS = credentials('dhub')
-        KUBECONFIG_FILE = credentials('kubeconfig-credentials')
-        GITHUB_CREDENTIALS = credentials('github-credentials')
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                git credentialsId: 'github-credentials', url: 'https://github.com/DinaIW/examjen.git'
-            }
-        }
-
-        stage('Build Docker Images') {
-            parallel {
-                stage('Build cast-service Image') {
-                    steps {
-                        script {
-                            docker.build("didiiiw/jen:cast-service-latest", "-f cast-service/Dockerfile ./cast-service")
-                        }
-                    }
-                }
-                stage('Build movie-service Image') {
-                    steps {
-                        script {
-                            docker.build("didiiiw/jen:movie-service-latest", "-f movie-service/Dockerfile ./movie-service")
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Images') {
-            parallel {
-                stage('Push cast-service Image') {
-                    steps {
-                        script {
-                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
-                                docker.image("didiiiw/jen:cast-service-latest").push()
-                            }
-                        }
-                    }
-                }
-                stage('Push movie-service Image') {
-                    steps {
-                        script {
-                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
-                                docker.image("didiiiw/jen:movie-service-latest").push()
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Deploy to Dev') {
             steps {
                 script {
