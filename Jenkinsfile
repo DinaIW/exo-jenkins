@@ -11,6 +11,9 @@ pipeline {
         stage('Checkout') {
             steps {
                 git credentialsId: 'github-credentials', url: 'https://github.com/DinaIW/examjen.git'
+                script {
+                    pwd()
+                }
             }
         }
 
@@ -19,6 +22,7 @@ pipeline {
                 stage('Build cast-service Image') {
                     steps {
                         script {
+                            pwd()
                             docker.build("didiiiw/jen:cast-service-latest", "-f cast-service/Dockerfile ./cast-service")
                         }
                     }
@@ -26,6 +30,7 @@ pipeline {
                 stage('Build movie-service Image') {
                     steps {
                         script {
+                            pwd()
                             docker.build("didiiiw/jen:movie-service-latest", "-f movie-service/Dockerfile ./movie-service")
                         }
                     }
@@ -38,6 +43,7 @@ pipeline {
                 stage('Push cast-service Image') {
                     steps {
                         script {
+                            pwd()
                             docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
                                 docker.image("didiiiw/jen:cast-service-latest").push()
                             }
@@ -47,6 +53,7 @@ pipeline {
                 stage('Push movie-service Image') {
                     steps {
                         script {
+                            pwd()
                             docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
                                 docker.image("didiiiw/jen:movie-service-latest").push()
                             }
@@ -59,6 +66,7 @@ pipeline {
         stage('Deploy to Dev') {
             steps {
                 script {
+                    pwd()
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-dev --namespace dev \
@@ -72,6 +80,7 @@ pipeline {
         stage('Deploy to QA') {
             steps {
                 script {
+                    pwd()
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-qa --namespace qa \
@@ -85,6 +94,7 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 script {
+                    pwd()
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-staging --namespace staging \
@@ -102,6 +112,7 @@ pipeline {
             steps {
                 input message: 'Deploy to Production?', ok: 'Deploy'
                 script {
+                    pwd()
                     sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
                     sh """
                         helm install chart-prod --namespace prod \
