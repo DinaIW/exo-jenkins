@@ -2,8 +2,7 @@
 # FastAPI Movie
 # ------------------------------------------------------------------------------
 fastapi_movie:
-  image: jhtyl13r/movie-fastapi
-  tag: "v.${BUILD_ID}.0"
+  image: "didiiiw/jen:movie-service-latest"
   containerPort: 8000
   service:
     type: NodePort
@@ -20,8 +19,7 @@ fastapi_movie:
 # FastAPI Cast
 # ------------------------------------------------------------------------------
 fastapi_cast:
-  image: jhtyl13r/cast-fastapi
-  tag: "v.${BUILD_ID}.0"
+  image: "didiiiw/jen:cast-service-latest"
   containerPort: 8000
   service:
     type: NodePort
@@ -67,18 +65,3 @@ fastapi:
     service:
       port: 8002
 
-# ------------------------------------------------------------------------------
-# Ingress
-# ------------------------------------------------------------------------------
-ingress:
-  name: fastapi-ingress
-  ingressClassName: traefik
-  host: devops.dev-euphony.fr
-  path: /
-  pathType: Prefix
-  serviceName: fastapi-service
-  servicePort: 80
-  tls:
-    - hosts:
-        - devops.dev-euphony.fr
-      secretName: mon-certificat-secret

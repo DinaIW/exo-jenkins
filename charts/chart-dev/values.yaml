@@ -2,8 +2,7 @@
 # FastAPI Movie
 # ------------------------------------------------------------------------------
 fastapi_movie:
-  image: jhtyl13r/movie-fastapi
-  tag: "v.${DOCKER_TAG}.0"
+  image: "didiiiw/jen:movie-service-latest"
   containerPort: 8000
   service:
     type: NodePort
