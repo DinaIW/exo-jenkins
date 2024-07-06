@@ -1,174 +1,171 @@
 pipeline {
-    environment {
-        DOCKER_ID = 'jhtyl13r'
-        DOCKER_TAG = "v.${env.BUILD_ID}.0"
-        DOCKER_IMAGE_MOVIE = 'movie-fastapi'
-        DOCKER_IMAGE_CAST = 'cast-fastapi'
-        DOCKER_PASS = credentials('DOCKER_HUB_PASS')
-        KUBECONFIG = credentials('config')
-    }
     agent any
 
+    environment {
+        DOCKER_HUB_PASS = credentials('dhub')
+        KUBECONFIG_FILE = credentials('kubeconfig-credentials')
+        GITHUB_CREDENTIALS = credentials('github-credentials')
+    }
+
     stages {
-        stage('Docker Build for movie-fastapi') {
+        stage('Checkout') {
             steps {
-                script {
-                    sh '''
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG -f build/movie-service/Dockerfile .
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:${DOCKER_TAG}
-                    sleep 6
-                    '''
-                }
+                git credentialsId: 'github-credentials', url: 'https://github.com/DinaIW/examjen.git'
             }
         }
 
-        stage('Docker Build for cast-fastapi') {
-            steps {
-                script {
-                    sh '''
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG -f build/cast-service/Dockerfile .
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:${DOCKER_TAG}
-                    sleep 6
-                    '''
-                }
-            }
-        }
-
-        stage('Deployment to Dev') {
-            environment {
-                VALUES_FILE = 'charts/chart-dev/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-dev/values-secret.yaml'
-                NAMESPACE = 'dev'
-                CHART_NAME = 'chart-dev'
-                CHART_DIR = 'charts/chart-dev'
-            }
-            steps {
-                script {
-                    // Installation du Chart Dev
-                    sh '''
-                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
-                    cp ${VALUES_FILE} values.yml
-                    cp ${VALUES_SECRET_FILE} values-secret.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
-                    --values=values.yml \
-                    --values=values-secret.yml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set fastapi_movie.tag=${DOCKER_TAG} \
-                    --set fastapi_cast.tag=${DOCKER_TAG}
-                    '''
-                }
-            }
-        }
-
-        stage('Deployment to qa') {
-            environment {
-                VALUES_FILE = 'charts/chart-qa/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-qa/values-secret.yaml'
-                NAMESPACE = 'qa'
-                CHART_NAME = 'chart-qa'
-                CHART_DIR = 'charts/chart-qa'
-            }
-            steps {
-                script {
-                    // Installation du Chart QA
-                    sh '''
-                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
-                    cp ${VALUES_FILE} values.yml
-                    cp ${VALUES_SECRET_FILE} values-secret.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
-                    --values=values.yml \
-                    --values=values-secret.yml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set fastapi_movie.tag=${DOCKER_TAG} \
-                    --set fastapi_cast.tag=${DOCKER_TAG}
-                    '''
-                }
-            }
-        }
-
-        stage('Deployment to staging') {
-            environment {
-                VALUES_FILE = 'charts/chart-staging/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-staging/values-secret.yaml'
-                NAMESPACE = 'staging'
-                CHART_NAME = 'chart-staging'
-                CHART_DIR = 'charts/chart-staging'
-            }
-            steps {
-                script {
-                    // Installation du Chart Staging
-                    sh '''
-                    helm uninstall ${CHART_NAME} -n ${NAMESPACE}
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
-                    cp ${VALUES_FILE} values.yml
-                    cp ${VALUES_SECRET_FILE} values-secret.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
-                    --values=values.yml \
-                    --values=values-secret.yml \
-                    --namespace ${NAMESPACE} \
-                    --wait \
-                    --set fastapi_movie.tag=${DOCKER_TAG} \
-                    --set fastapi_cast.tag=${DOCKER_TAG}
-                    '''
-                }
-            }
-        }
-
-        stage('Deploiement en prod') {
-            environment {
-                VALUES_FILE = 'charts/chart-prod/values.yaml'
-                VALUES_SECRET_FILE = 'charts/chart-prod/values-secret.yaml'
-                NAMESPACE = 'prod'
-                CHART_NAME = 'chart-prod'
-                CHART_DIR = 'charts/chart-prod'
-            }
-            steps {
-                script {
-                    // Demander une confirmation avant de déployer en production
-                    timeout(time: 1, unit: 'HOURS') {
-                        def userInput = input(
-                            message: 'Êtes-vous sûr de vouloir déployer en production ?',
-                            ok: 'Déployer',
-                            parameters: [
-                                [$class: 'BooleanParameterDefinition', name: 'confirm', defaultValue: false]
-                            ]
-                        )
-                        if (userInput == false) {
-                            error('Déploiement en production annulé.')
-                        } else {
-                            // Installation du Chart Prod
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            cp $KUBECONFIG .kube/config
-                            cp ${VALUES_FILE} values.yml
-                            cp ${VALUES_SECRET_FILE} values-secret.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                            helm upgrade --install ${CHART_NAME} ${CHART_DIR} \
-                            --values=values.yml \
-                            --values=values-secret.yml \
-                            --namespace ${NAMESPACE} \
-                            --wait \
-                            --set fastapi_movie.tag=${DOCKER_TAG} \
-                            --set fastapi_cast.tag=${DOCKER_TAG}
-                            '''
+        stage('Build Docker Images') {
+            parallel {
+                stage('Build cast-service Image') {
+                    steps {
+                        script {
+                            docker.build("didiiiw/jen:cast-service-latest", "-f cast-service/Dockerfile ./cast-service")
                         }
                     }
+                }
+                stage('Build movie-service Image') {
+                    steps {
+                        script {
+                            docker.build("didiiiw/jen:movie-service-latest", "-f movie-service/Dockerfile ./movie-service")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            parallel {
+                stage('Push cast-service Image') {
+                    steps {
+                        script {
+                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
+                                docker.image("didiiiw/jen:cast-service-latest").push()
+                            }
+                        }
+                    }
+                }
+                stage('Push movie-service Image') {
+                    steps {
+                        script {
+                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
+                                docker.image("didiiiw/jen:movie-service-latest").push()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_PASS = credentials('dhub')
+        KUBECONFIG_FILE = credentials('kubeconfig-credentials')
+        GITHUB_CREDENTIALS = credentials('github-credentials')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-credentials', url: 'https://github.com/DinaIW/examjen.git'
+            }
+        }
+
+        stage('Build Docker Images') {
+            parallel {
+                stage('Build cast-service Image') {
+                    steps {
+                        script {
+                            docker.build("didiiiw/jen:cast-service-latest", "-f cast-service/Dockerfile ./cast-service")
+                        }
+                    }
+                }
+                stage('Build movie-service Image') {
+                    steps {
+                        script {
+                            docker.build("didiiiw/jen:movie-service-latest", "-f movie-service/Dockerfile ./movie-service")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            parallel {
+                stage('Push cast-service Image') {
+                    steps {
+                        script {
+                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
+                                docker.image("didiiiw/jen:cast-service-latest").push()
+                            }
+                        }
+                    }
+                }
+                stage('Push movie-service Image') {
+                    steps {
+                        script {
+                            docker.withRegistry('https://index.docker.io/v1/', 'dhub') {
+                                docker.image("didiiiw/jen:movie-service-latest").push()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Dev') {
+            steps {
+                script {
+                    sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
+                    sh """
+                        helm install chart-dev --namespace dev \
+                        -f charts/chart-dev/values.yaml \
+                        -f charts/chart-dev/values-secret.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to QA') {
+            steps {
+                script {
+                    sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
+                    sh """
+                        helm install chart-qa --namespace qa \
+                        -f charts/chart-qa/values.yaml \
+                        -f charts/chart-qa/values-secret.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                script {
+                    sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
+                    sh """
+                        helm install chart-staging --namespace staging \
+                        -f charts/chart-staging/values.yaml \
+                        -f charts/chart-staging/values-secret.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                branch 'master'
+            }
+            steps {
+                input message: 'Deploy to Production?', ok: 'Deploy'
+                script {
+                    sh 'mkdir -p ~/.kube && cat "$KUBECONFIG_FILE" > ~/.kube/config'
+                    sh """
+                        helm install chart-prod --namespace prod \
+                        -f charts/chart-prod/values.yaml \
+                        -f charts/chart-prod/values-secret.yaml
+                    """
                 }
             }
         }
